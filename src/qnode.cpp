@@ -95,18 +95,15 @@ void QNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
   {
     // RCLCPP_WARN(node->get_logger(), "No ArUco markers detected in the image.");
   }
-  else
+  else if (!roi_init_done)
   {
     aruco_img = resize_img.clone();
     cv::aruco::drawDetectedMarkers(aruco_img, marker_corners, marker_ids);
-    if (roi_init_done)
-    {
-      estimateProcess();
-    }
-    else
-    {
-      getROI();
-    }
+    getROI();
+  }
+  else
+  {
+    estimateProcess();
   }
 
   Q_EMIT imgSignalEmit();
@@ -114,8 +111,49 @@ void QNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 
 void QNode::estimateProcess()
 {
+  std::vector<int> object_marker_ids = {1, 2, 3};
+
   cv::warpPerspective(resize_img, roi_img, perspectiveMatrix, roi_size);
   cv::resize(roi_img, roi_img, cv::Size(480, 480), 0, 0, cv::INTER_LINEAR);
+
+  cv::aruco::detectMarkers(roi_img, dictionary, marker_corners, marker_ids);
+
+  if (marker_ids.empty())
+  {
+    RCLCPP_WARN(node->get_logger(), "No markers detected in the ROI.");
+    return;
+  }
+
+  cv::aruco::drawDetectedMarkers(roi_img, marker_corners, marker_ids, cv::Scalar(0, 255, 0));
+
+  for (size_t i = 0; i < marker_ids.size(); ++i)
+  {
+    int detected_id = marker_ids[i];
+
+    if (std::find(object_marker_ids.begin(), object_marker_ids.end(), detected_id) != object_marker_ids.end())
+    {
+      cv::Point2f center(0, 0);
+      for (const auto &corner : marker_corners[i])
+      {
+        center += corner;
+      }
+      center *= 0.25f;
+
+      cv::line(roi_img, cv::Point(0, 0), center, cv::Scalar(255, 0, 0), 2);
+
+      std::vector<cv::Vec3d> rvecs, tvecs;
+      cv::aruco::estimatePoseSingleMarkers(marker_corners, 0.037, camera_matrix_, distortion_coefficients_, rvecs, tvecs);
+
+      cv::Vec3d rvec = rvecs[i];
+      cv::Mat rotation_matrix;
+      cv::Rodrigues(rvec, rotation_matrix);
+
+      double yaw = std::atan2(rotation_matrix.at<double>(1, 0), rotation_matrix.at<double>(0, 0));
+      double yaw_degrees = yaw * 180.0 / CV_PI;
+
+      RCLCPP_INFO(node->get_logger(), "Yaw of object marker ID %d: %.2f degrees", detected_id, yaw_degrees);
+    }
+  }
 }
 
 void QNode::getROI()
