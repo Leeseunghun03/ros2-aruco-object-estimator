@@ -127,9 +127,8 @@ void QNode::estimateProcess()
   cv::aruco::drawDetectedMarkers(roi_img, marker_corners, marker_ids, cv::Scalar(0, 255, 0));
 
   float top_x_offset = 90.0f;
-  float top_y_offset = 70.0f;
   float bottom_x_offset = 180.0f;
-  float bottom_y_offset = 70.0f;
+  float y_offset = 70.0f;
 
   for (size_t i = 0; i < marker_ids.size(); ++i)
   {
@@ -148,24 +147,18 @@ void QNode::estimateProcess()
 
       float top_left_start = center.x - 170.0;
       std::vector<cv::Point2f> top_points = {
-          cv::Point2f(top_left_start, center.y - top_y_offset),
-          cv::Point2f(top_left_start + top_x_offset, center.y - top_y_offset),
-          cv::Point2f(top_left_start + 2 * top_x_offset, center.y - top_y_offset),
-          cv::Point2f(top_left_start + 3 * top_x_offset, center.y - top_y_offset)};
+          cv::Point2f(top_left_start, center.y + y_offset),
+          cv::Point2f(top_left_start + top_x_offset, center.y + y_offset),
+          cv::Point2f(top_left_start + 2 * top_x_offset, center.y + y_offset),
+          cv::Point2f(top_left_start + 3 * top_x_offset, center.y + y_offset)};
 
       float bottom_left_start = center.x - 110.0;
       std::vector<cv::Point2f> bottom_points = {
-          cv::Point2f(bottom_left_start, center.y + bottom_y_offset),
-          cv::Point2f(bottom_left_start + bottom_x_offset, center.y + bottom_y_offset)};
+          cv::Point2f(bottom_left_start, center.y - y_offset),
+          cv::Point2f(bottom_left_start + bottom_x_offset, center.y - y_offset)};
 
-      for (auto &point : top_points)
-      {
-        cv::circle(roi_img, point, 10, cv::Scalar(0, 0, 255), -1);
-      }
-      for (auto &point : bottom_points)
-      {
-        cv::circle(roi_img, point, 10, cv::Scalar(0, 0, 255), -1);
-      }
+      std::vector<cv::Point2f> all_points = top_points;
+      all_points.insert(all_points.end(), bottom_points.begin(), bottom_points.end());
 
       std::vector<cv::Vec3d> rvecs, tvecs;
       cv::aruco::estimatePoseSingleMarkers(marker_corners, 0.037, camera_matrix_, distortion_coefficients_, rvecs, tvecs);
@@ -175,12 +168,32 @@ void QNode::estimateProcess()
       cv::Rodrigues(rvec, rotation_matrix);
 
       double yaw = std::atan2(rotation_matrix.at<double>(1, 0), rotation_matrix.at<double>(0, 0));
-      double yaw_degrees = yaw * 180.0 / CV_PI;
 
-      RCLCPP_INFO(node->get_logger(), "Yaw of object marker ID %d: %.2f degrees", detected_id, yaw_degrees);
+      std::vector<cv::Point2f> rotated_points;
+
+      for (const auto &point : all_points)
+      {
+        cv::Point2f translated_point = point - center;
+
+        cv::Mat point_mat = (cv::Mat_<double>(3, 1) << translated_point.x, translated_point.y, 1);
+        cv::Mat rotated_point_mat = rotation_matrix * point_mat;
+
+        cv::Point2f rotated_point(rotated_point_mat.at<double>(0), rotated_point_mat.at<double>(1));
+        rotated_point += center;
+
+        rotated_points.push_back(rotated_point);
+      }
+
+      for (auto &point : rotated_points)
+      {
+        cv::circle(roi_img, point, 10, cv::Scalar(0, 0, 255), -1);
+      }
+
+      RCLCPP_INFO(node->get_logger(), "Yaw of object marker ID %d: %.2f degrees", detected_id, yaw * 180.0 / CV_PI);
     }
   }
 }
+
 
 void QNode::getROI()
 {
