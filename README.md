@@ -32,7 +32,7 @@ cd ~/ros2_ws && colcon build --symlink-install
 ros2 launch realsense2_camera rs_align_depth_launch.py
 ```
 
-### 4. Estimate
+### 4. Start Estimate
 ```bash
 ros2 launch object_estimator object_estimator.py
 ```
