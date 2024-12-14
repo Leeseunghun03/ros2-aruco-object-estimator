@@ -18,3 +18,27 @@ Clone this repository into your ROS2 workspace:
 ```bash
 cd ~/ros2_ws/src
 git clone https://github.com/Leeseunghun03/ros2-aruco-object-estimator.git aruco_workspace
+```
+
+### 2. Build
+
+```bash
+cd ~/ros2_ws && colcon build --symlink-install
+```
+
+### 3. Camera (RGBD)
+
+```bash
+ros2 launch realsense2_camera rs_align_depth_launch.py
+```
+
+### 4. Estimate
+```bash
+ros2 launch object_estimator object_estimator.py
+```
+
+## Example Use Case: Autonomous Feeding Robot
+This package can be integrated into an autonomous feeding robot, where ArUco markers are used to estimate tray serving locations. The robot detects the markers placed on a tray and accurately calculates the serving positions, helping the robot to autonomously serve food to individuals in a predefined area. This capability can be used in healthcare, hospitality, and other industries that require automated feeding solutions.
+
+## Video
+
