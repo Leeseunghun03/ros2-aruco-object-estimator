@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package>
+  <name>object_estimator</name>
+  <version>0.1.0</version>
+  <description>
+
+     description
+
+  </description>
+  <maintainer email="author@mail.com">author</maintainer>
+  <author>author</author>
+  <license>BSD</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <run_depend>rclcpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>OpenCV</run_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
