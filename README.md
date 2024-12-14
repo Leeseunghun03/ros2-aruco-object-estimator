@@ -17,4 +17,4 @@ Clone this repository into your ROS2 workspace:
 
 ```bash
 cd ~/ros2_ws/src
-git clone <repository_url> aruco_workspace
+git clone https://github.com/Leeseunghun03/ros2-aruco-object-estimator.git aruco_workspace
