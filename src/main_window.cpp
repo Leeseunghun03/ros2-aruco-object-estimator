@@ -47,14 +47,6 @@ void MainWindow::imageUpdateSlot()
       QImage::Format_RGB888);
   ui->result->setPixmap(QPixmap::fromImage(qresult_img.rgbSwapped()));
 
-  // QImage qbinary_img((const unsigned char*)(qnode.binary_img.data), qnode.binary_img.cols, qnode.binary_img.rows,
-  //                    QImage::Format_Grayscale8);
-  // ui.binary->setPixmap(QPixmap::fromImage(qbinary_img.rgbSwapped()));
-
-  // QImage qpath_img((const unsigned char*)(qnode.path_img.data), qnode.path_img.cols, qnode.path_img.rows,
-  //                  QImage::Format_RGB888);
-  // ui.path->setPixmap(QPixmap::fromImage(qpath_img.rgbSwapped()));
-
   ui->camera_matrix->setText(QString(qnode->camera_matrix_str_.c_str()));
   ui->distortion_coefficients->setText(QString(qnode->distortion_coefficients_str_.c_str()));
 }

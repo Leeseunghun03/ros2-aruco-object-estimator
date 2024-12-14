@@ -40,6 +40,7 @@ public:
   cv::Mat resize_img;
   cv::Mat aruco_img;
   cv::Mat roi_img;
+  cv::Mat depth_img;
 
   cv::Mat camera_matrix_;
   cv::Mat distortion_coefficients_;
@@ -55,15 +56,17 @@ private:
 
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscriber_;
   rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_subscriber_;
-  rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_publisher_;
+  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr depth_image_subscriber_;
   rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr point_publisher_;
 
   void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
   void cameraInfoCallback(const sensor_msgs::msg::CameraInfo::SharedPtr msg);
+  void depthimageCallback(const sensor_msgs::msg::Image::SharedPtr msg);
   void publishPoints(const std::vector<cv::Point2f> &points, float scale);
 
   void getROI();
   void estimateProcess();
+  int getDepth(cv::Mat image, const cv::Point &point);
 
   cv::Ptr<cv::aruco::Dictionary> dictionary;
   cv::Point2i top_left_corner_result;
@@ -73,6 +76,8 @@ private:
 
   cv::Size roi_size;
   cv::Mat perspectiveMatrix;
+
+  int z_offset = 400;
 
 Q_SIGNALS:
   void rosShutDown();
