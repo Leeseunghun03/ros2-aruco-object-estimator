@@ -18,6 +18,8 @@ QNode::QNode()
 
   image_publisher_ = node->create_publisher<sensor_msgs::msg::Image>("processed_image", 10);
 
+  point_publisher_ = node->create_publisher<geometry_msgs::msg::Point>("points_topic", 10);
+
   this->start();
 }
 
@@ -109,6 +111,20 @@ void QNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
   Q_EMIT imgSignalEmit();
 }
 
+void QNode::publishPoints(const std::vector<cv::Point2f> &points, float scale)
+{
+  for (const auto &point : points)
+  {
+    geometry_msgs::msg::Point ros_point;
+
+    ros_point.x = static_cast<float>(point.x * scale);
+    ros_point.y = static_cast<float>(point.y * scale);
+    ros_point.z = 0.0f; 
+
+    point_publisher_->publish(ros_point);
+  }
+}
+
 void QNode::estimateProcess()
 {
   std::vector<int> object_marker_ids = {1, 2, 3};
@@ -125,6 +141,10 @@ void QNode::estimateProcess()
   }
 
   cv::aruco::drawDetectedMarkers(roi_img, marker_corners, marker_ids, cv::Scalar(0, 255, 0));
+
+  float marker_real_size = 37.0;
+  float marker_image_size = cv::norm(marker_corners[0][0] - marker_corners[0][1]);
+  float scale = marker_real_size / marker_image_size;
 
   float top_x_offset = 90.0f;
   float bottom_x_offset = 180.0f;
@@ -184,6 +204,11 @@ void QNode::estimateProcess()
         rotated_points.push_back(rotated_point);
       }
 
+      std::vector<cv::Point2f> pub_points = {
+          rotated_points[0], rotated_points[1], rotated_points[2], rotated_points[3], rotated_points[4], rotated_points[5]};
+
+      publishPoints(pub_points, scale);
+
       for (auto &point : rotated_points)
       {
         cv::circle(roi_img, point, 10, cv::Scalar(0, 0, 255), -1);
@@ -193,7 +218,6 @@ void QNode::estimateProcess()
     }
   }
 }
-
 
 void QNode::getROI()
 {

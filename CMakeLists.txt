@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -38,7 +39,7 @@ add_executable(${PROJECT_NAME}
     ${QT_RESOUCE_HPP}
     ${QT_UI_HPP} 
   )
-ament_target_dependencies(${PROJECT_NAME} rclcpp  Boost sensor_msgs cv_bridge OpenCV)
+ament_target_dependencies(${PROJECT_NAME} rclcpp  Boost sensor_msgs geometry_msgs cv_bridge OpenCV)
 target_link_libraries(${PROJECT_NAME} Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Network ${OpenCV_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} DESTINATION lib/${PROJECT_NAME})
 install(
