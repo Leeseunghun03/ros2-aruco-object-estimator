@@ -126,6 +126,11 @@ void QNode::estimateProcess()
 
   cv::aruco::drawDetectedMarkers(roi_img, marker_corners, marker_ids, cv::Scalar(0, 255, 0));
 
+  float top_x_offset = 90.0f;
+  float top_y_offset = 70.0f;
+  float bottom_x_offset = 180.0f;
+  float bottom_y_offset = 70.0f;
+
   for (size_t i = 0; i < marker_ids.size(); ++i)
   {
     int detected_id = marker_ids[i];
@@ -140,6 +145,27 @@ void QNode::estimateProcess()
       center *= 0.25f;
 
       cv::line(roi_img, cv::Point(0, 0), center, cv::Scalar(255, 0, 0), 2);
+
+      float top_left_start = center.x - 170.0;
+      std::vector<cv::Point2f> top_points = {
+          cv::Point2f(top_left_start, center.y - top_y_offset),
+          cv::Point2f(top_left_start + top_x_offset, center.y - top_y_offset),
+          cv::Point2f(top_left_start + 2 * top_x_offset, center.y - top_y_offset),
+          cv::Point2f(top_left_start + 3 * top_x_offset, center.y - top_y_offset)};
+
+      float bottom_left_start = center.x - 110.0;
+      std::vector<cv::Point2f> bottom_points = {
+          cv::Point2f(bottom_left_start, center.y + bottom_y_offset),
+          cv::Point2f(bottom_left_start + bottom_x_offset, center.y + bottom_y_offset)};
+
+      for (auto &point : top_points)
+      {
+        cv::circle(roi_img, point, 10, cv::Scalar(0, 0, 255), -1);
+      }
+      for (auto &point : bottom_points)
+      {
+        cv::circle(roi_img, point, 10, cv::Scalar(0, 0, 255), -1);
+      }
 
       std::vector<cv::Vec3d> rvecs, tvecs;
       cv::aruco::estimatePoseSingleMarkers(marker_corners, 0.037, camera_matrix_, distortion_coefficients_, rvecs, tvecs);
